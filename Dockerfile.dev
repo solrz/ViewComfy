@@ -1,0 +1,25 @@
+FROM node:20-alpine
+
+# Install git for development
+RUN apk add --no-cache git sed
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Apply SSR fix
+RUN sed -i "s/const isNotificationAvailable = 'Notification' in window/const isNotificationAvailable = typeof window !== 'undefined' \\&\\& 'Notification' in window/g" components/pages/playground/playground-page.tsx
+
+# Expose port
+EXPOSE 3000
+
+# Start development server
+CMD ["npm", "run", "dev"]

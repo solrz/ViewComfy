@@ -5,7 +5,7 @@ import type { IInput } from "@/app/interfaces/input";
 import * as constants from "@/app/constants";
 import { getComfyUIRandomSeed } from "@/lib/utils";
 
-const COMFY_INPUTS_DIR = path.join(process.cwd(), "comfy", "inputs");
+const COMFY_INPUTS_DIR = process.env.COMFY_INPUTS_DIR || path.join(process.cwd(), "comfy", "inputs");
 const COMFY_WORKFLOWS_DIR = path.join(process.cwd(), "comfy", "workflows");
 
 export class ComfyWorkflow {
@@ -89,9 +89,44 @@ export class ComfyWorkflow {
 
     private async createFileFromInput(file: File) {
         const fileName = `${this.getFileNamePrefix()}${file.name}`;
+
+        try {
+            // Try to upload to ComfyUI first
+            const uploaded = await this.uploadToComfyUI(file, fileName);
+            if (uploaded) {
+                return fileName; // Return just filename for ComfyUI
+            }
+        } catch (error) {
+            console.warn('Failed to upload to ComfyUI, falling back to local storage:', error);
+        }
+
+        // Fallback to local storage
         const filePath = path.join(COMFY_INPUTS_DIR, fileName);
         const fileBuffer = await file.arrayBuffer();
+
+        // Ensure directory exists
+        await fs.mkdir(COMFY_INPUTS_DIR, { recursive: true });
         await fs.writeFile(filePath, Buffer.from(fileBuffer));
         return filePath;
+    }
+
+    private async uploadToComfyUI(file: File, fileName: string): Promise<boolean> {
+        const baseUrl = process.env.COMFYUI_API_URL || "127.0.0.1:8188";
+        const secure = process.env.COMFYUI_SECURE === "true";
+        const protocol = secure ? "https://" : "http://";
+
+        const formData = new FormData();
+        formData.append('image', file, fileName);
+
+        const response = await fetch(`${protocol}${baseUrl}/upload/image`, {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!response.ok) {
+            throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
+        }
+
+        return true;
     }
 }

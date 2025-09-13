@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  viewcomfy-dev:
+    image: node:20
+    container_name: viewcomfy-dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - COMFYUI_API_URL=192.168.11.248:8188
+      - COMFYUI_SECURE=false
+      - NEXT_PUBLIC_VIEW_MODE=false
+      - NEXT_PUBLIC_USER_MANAGEMENT=false
+      - NEXT_PUBLIC_CLOUD_WS_URL=ws://192.168.11.248:8188
+    volumes:
+      - .:/app
+      - /app/node_modules
+    working_dir: /app
+    command: >
+      sh -c "npm install &&
+             sed -i 's/const isNotificationAvailable = '\''Notification'\'' in window/const isNotificationAvailable = typeof window !== '\''undefined'\'' \\&\\& '\''Notification'\'' in window/g' components/pages/playground/playground-page.tsx &&
+             npm run dev"
+    networks:
+      - viewcomfy-network
+
+  viewcomfy-persistent:
+    image: node:20
+    container_name: viewcomfy-persistent
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - COMFYUI_API_URL=192.168.11.248:8188
+      - COMFYUI_SECURE=false
+      - NEXT_PUBLIC_VIEW_MODE=false
+      - NEXT_PUBLIC_USER_MANAGEMENT=false
+      - NEXT_PUBLIC_CLOUD_WS_URL=ws://192.168.11.248:8188
+    volumes:
+      - ./view_comfy.json:/tmp/workflow_config.json
+      - ./persistent-data:/app/persistent
+    command: >
+      sh -c "cd /tmp &&
+             rm -rf ViewComfy &&
+             git clone https://github.com/ViewComfy/ViewComfy.git &&
+             cd ViewComfy &&
+             if [ -f /app/persistent/view_comfy.json ]; then
+               echo 'Using persistent config';
+               cp /app/persistent/view_comfy.json view_comfy.json;
+             else
+               echo 'Using initial config';
+               cp /tmp/workflow_config.json view_comfy.json &&
+               cp view_comfy.json /app/persistent/;
+             fi &&
+             npm install &&
+             sed -i 's/const isNotificationAvailable = '\''Notification'\'' in window/const isNotificationAvailable = typeof window !== '\''undefined'\'' \\&\\& '\''Notification'\'' in window/g' components/pages/playground/playground-page.tsx &&
+             npm run dev"
+    networks:
+      - viewcomfy-network
+
+networks:
+  viewcomfy-network:
+    driver: bridge

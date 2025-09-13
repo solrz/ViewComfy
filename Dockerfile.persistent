@@ -1,0 +1,20 @@
+FROM node:20-alpine
+
+# Install git and sed for runtime operations
+RUN apk add --no-cache git sed
+
+# Create directories
+RUN mkdir -p /app/persistent
+
+# Set working directory
+WORKDIR /tmp
+
+# Entry script for persistent deployment
+COPY docker-entrypoint-persistent.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint-persistent.sh
+
+# Expose port
+EXPOSE 3000
+
+# Use custom entrypoint
+ENTRYPOINT ["docker-entrypoint-persistent.sh"]

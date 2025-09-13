@@ -1,0 +1,143 @@
+{
+  "workflows": [
+    {
+      "viewComfyJSON": {
+        "title": "SDT2I - Clean Galaxy Bottle",
+        "description": "Clean text-to-image generation with galaxy theme",
+        "previewImages": [null, null, null],
+        "inputs": [
+          {
+            "title": "Positive Prompt",
+            "inputs": [
+              {
+                "title": "Scene Description",
+                "placeholder": "Describe your scene",
+                "value": "beautiful galaxy bottle floating in space, cosmic nebula",
+                "workflowPath": ["6", "inputs", "text"],
+                "helpText": "Describe what you want to generate",
+                "valueType": "long-text",
+                "validations": {"required": true},
+                "key": "6-inputs-text"
+              }
+            ],
+            "key": "6-CLIPTextEncode"
+          },
+          {
+            "title": "Negative Prompt",
+            "inputs": [
+              {
+                "title": "What to Avoid",
+                "placeholder": "Things to exclude",
+                "value": "text, watermark, low quality",
+                "workflowPath": ["7", "inputs", "text"],
+                "helpText": "Describe what you want to avoid",
+                "valueType": "long-text",
+                "validations": {"required": false},
+                "key": "7-inputs-text"
+              }
+            ],
+            "key": "7-CLIPTextEncode"
+          }
+        ],
+        "advancedInputs": [
+          {
+            "title": "Generation Settings",
+            "inputs": [
+              {
+                "title": "Steps",
+                "placeholder": "Steps",
+                "value": 15,
+                "workflowPath": ["3", "inputs", "steps"],
+                "helpText": "Number of denoising steps",
+                "valueType": "number",
+                "validations": {"required": true},
+                "key": "3-inputs-steps"
+              },
+              {
+                "title": "CFG Scale",
+                "placeholder": "CFG",
+                "value": 7,
+                "workflowPath": ["3", "inputs", "cfg"],
+                "helpText": "How closely to follow the prompt",
+                "valueType": "number",
+                "validations": {"required": true},
+                "key": "3-inputs-cfg"
+              },
+              {
+                "title": "Seed",
+                "placeholder": "Seed",
+                "value": 42,
+                "workflowPath": ["3", "inputs", "seed"],
+                "helpText": "Random seed for generation",
+                "valueType": "seed",
+                "validations": {"required": true},
+                "key": "3-inputs-seed"
+              }
+            ],
+            "key": "3-KSampler"
+          }
+        ],
+        "id": "sdt2i-clean-galaxy"
+      },
+      "workflowApiJSON": {
+        "3": {
+          "inputs": {
+            "seed": 42,
+            "steps": 15,
+            "cfg": 7,
+            "sampler_name": "euler",
+            "scheduler": "normal",
+            "denoise": 1,
+            "model": ["4", 0],
+            "positive": ["6", 0],
+            "negative": ["7", 0],
+            "latent_image": ["5", 0]
+          },
+          "class_type": "KSampler"
+        },
+        "4": {
+          "inputs": {
+            "ckpt_name": "v1-5-pruned-emaonly.safetensors"
+          },
+          "class_type": "CheckpointLoaderSimple"
+        },
+        "5": {
+          "inputs": {
+            "width": 512,
+            "height": 512,
+            "batch_size": 1
+          },
+          "class_type": "EmptyLatentImage"
+        },
+        "6": {
+          "inputs": {
+            "text": "beautiful galaxy bottle floating in space, cosmic nebula",
+            "clip": ["4", 1]
+          },
+          "class_type": "CLIPTextEncode"
+        },
+        "7": {
+          "inputs": {
+            "text": "text, watermark, low quality",
+            "clip": ["4", 1]
+          },
+          "class_type": "CLIPTextEncode"
+        },
+        "8": {
+          "inputs": {
+            "samples": ["3", 0],
+            "vae": ["4", 2]
+          },
+          "class_type": "VAEDecode"
+        },
+        "9": {
+          "inputs": {
+            "filename_prefix": "ViewComfy_SDT2I",
+            "images": ["8", 0]
+          },
+          "class_type": "SaveImage"
+        }
+      }
+    }
+  ]
+}

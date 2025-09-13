@@ -1,8 +1,57 @@
-Dockerfile
-.dockerignore
+# Dependencies
 node_modules
-npm-debug.log
-README.md
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Next.js build output
 .next
-.git
+
+# Environment files
 .env
+.env.test
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+logs
+*.log
+
+# Persistent data directory
+persistent-data/
+
+# Git
+.git
+.gitignore
+
+# Docker (exclude our custom Docker files from builds)
+Dockerfile.dev
+Dockerfile.persistent
+docker-compose*.yml
+.dockerignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary folders
+tmp/
+temp/
+
+# Coverage directory
+coverage
+.nyc_output
